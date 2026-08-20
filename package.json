@@ -1,0 +1,13 @@
+{
+  "name": "soc-triage",
+  "version": "1.0.0",
+  "description": "Entraînement au tri d'alertes de sécurité (SOC) : application web statique, en français, sans backend ni connexion réseau.",
+  "private": true,
+  "license": "MIT",
+  "scripts": {
+    "test": "node --test tests/"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

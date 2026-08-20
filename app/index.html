@@ -1,0 +1,241 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <title>SOC // TRIAGE</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- Favicon en ligne (aucune requête réseau, cf. FR-009) : reprend le
+       même motif pixel-art que l'icône Terminal du bureau simulé. -->
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8' shape-rendering='crispEdges'%3E%3Crect width='8' height='8' fill='%230c0d0b'/%3E%3Cg fill='%23f0b429'%3E%3Crect x='0' y='0' width='8' height='1'/%3E%3Crect x='0' y='1' width='1' height='1'/%3E%3Crect x='7' y='1' width='1' height='1'/%3E%3Crect x='0' y='2' width='1' height='1'/%3E%3Crect x='2' y='2' width='1' height='1'/%3E%3Crect x='7' y='2' width='1' height='1'/%3E%3Crect x='0' y='3' width='1' height='1'/%3E%3Crect x='3' y='3' width='1' height='1'/%3E%3Crect x='7' y='3' width='1' height='1'/%3E%3Crect x='0' y='4' width='1' height='1'/%3E%3Crect x='2' y='4' width='1' height='1'/%3E%3Crect x='7' y='4' width='1' height='1'/%3E%3Crect x='0' y='5' width='1' height='1'/%3E%3Crect x='4' y='5' width='3' height='1'/%3E%3Crect x='7' y='5' width='1' height='1'/%3E%3Crect x='0' y='6' width='1' height='1'/%3E%3Crect x='7' y='6' width='1' height='1'/%3E%3Crect x='0' y='7' width='8' height='1'/%3E%3C/g%3E%3C/svg%3E">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header id="bandeau">
+    <span class="marque" role="button" tabindex="0" aria-label="Ouvrir le menu pause">SOC//TRIAGE<span class="curseur" aria-hidden="true">▮</span></span>
+    <div id="bandeau-etat" hidden>
+      <span class="minuteur-temps mono" id="bandeau-temps">--:--</span>
+      <div id="bandeau-barre"><div id="bandeau-barre-remplissage" style="width: 0%"></div></div>
+      <button type="button" id="bouton-pause" class="secondaire"></button>
+    </div>
+    <button type="button" id="bouton-theme" aria-label="Changer de thème">SOMBRE</button>
+  </header>
+
+  <main>
+    <!-- Vue 1 : Accueil / configuration -->
+    <section class="vue active" id="vue-accueil">
+      <div class="accroche">
+        <h1>SOC // TRIAGE</h1>
+        <p>Entraînement au tri d'alertes de sécurité. Données entièrement fictives, aucune connexion réseau, aucun compte requis.</p>
+      </div>
+
+      <div class="panneau-config">
+        <h2 class="titre-section">Configuration de la session</h2>
+        <div id="config-session">
+          <!-- Puces de durée + bouton de démarrage — rempli par main.js -->
+        </div>
+
+        <ul class="liste-fonctionnalites">
+          <li>Alertes fictives générées aléatoirement, 7 catégories couvertes</li>
+          <li>Fiche de triage Markdown générée après chaque décision</li>
+          <li>Correction détaillée et note sur 20 en fin de session</li>
+        </ul>
+
+        <button type="button" id="bouton-demarrer">Continuer</button>
+      </div>
+    </section>
+
+    <!-- Vue 2 : Briefing de mission -->
+    <section class="vue" id="vue-briefing" aria-labelledby="briefing-titre">
+      <h2 class="titre-section" id="briefing-titre">Contexte de la mission</h2>
+      <div id="briefing-contenu"></div>
+      <button type="button" id="bouton-commencer-tri">Commencer le tri</button>
+    </section>
+
+    <!-- Vue 3 : Session en cours -->
+    <section class="vue" id="vue-session">
+      <div class="onglets-session" id="onglets-session" hidden>
+        <button type="button" class="onglet-bouton" data-onglet="file" aria-pressed="true">File d'alertes</button>
+        <button type="button" class="onglet-bouton" data-onglet="chasse" aria-pressed="false">Chasse aux menaces</button>
+      </div>
+
+      <div class="onglet-contenu" id="onglet-file">
+        <div class="colonnes">
+          <section id="liste-alertes" aria-labelledby="liste-alertes-titre">
+            <h2 class="titre-section" id="liste-alertes-titre">File d'alertes</h2>
+            <p id="banniere-temps-ecoule" hidden>Temps écoulé — terminez de traiter la file en cours avant la correction.</p>
+            <div class="groupe-filtres" id="filtre-categorie-conteneur"></div>
+            <p id="liste-alertes-vide">&gt; en attente du flux — aucune alerte pour l'instant.</p>
+            <ul id="liste-alertes-contenu"></ul>
+          </section>
+
+          <section id="detail-alerte" aria-labelledby="detail-alerte-titre">
+            <h2 class="titre-section" id="detail-alerte-titre">Détail de l'alerte</h2>
+            <p id="detail-alerte-vide">Sélectionnez une alerte dans la file pour l'analyser.</p>
+            <div id="detail-alerte-contenu" hidden></div>
+          </section>
+        </div>
+      </div>
+
+      <div class="onglet-contenu" id="onglet-chasse" hidden>
+        <section id="chasse-section" aria-labelledby="chasse-titre">
+          <h2 class="titre-section" id="chasse-titre">Chasse aux menaces</h2>
+          <p class="indication-discrete">Le SIEM classique n'a rien remonté ici — à vous de débusquer ce qui lui a échappé.</p>
+          <div id="chasse-pensee" class="bulle-pensee" hidden>
+            <p id="chasse-pensee-texte"></p>
+            <button type="button" id="chasse-pensee-suivante" class="secondaire">Autre idée…</button>
+          </div>
+          <div id="chasse-bureau" class="bureau-flipper">
+            <div class="bureau-fond">
+              <div class="bureau-icones">
+                <button type="button" class="bureau-icone" id="icone-siem" data-app="siem"></button>
+                <button type="button" class="bureau-icone" id="icone-terminal" data-app="terminal"></button>
+                <button type="button" class="bureau-icone" id="icone-annuaire" data-app="annuaire"></button>
+                <button type="button" class="bureau-icone" id="icone-explorateur" data-app="explorateur"></button>
+                <button type="button" class="bureau-icone" id="icone-parefeu-chasse" data-app="pare_feu"></button>
+              </div>
+              <div id="chasse-fenetre" class="bureau-fenetre" hidden>
+                <div class="bureau-fenetre-bandeau">
+                  <span id="chasse-fenetre-titre" class="bureau-fenetre-nom"></span>
+                  <div class="bureau-fenetre-controles">
+                    <button type="button" class="bureau-fenetre-bouton" data-action="reduire" aria-label="Réduire"></button>
+                    <button type="button" class="bureau-fenetre-bouton" data-action="agrandir" aria-label="Plein écran"></button>
+                    <button type="button" class="bureau-fenetre-bouton" id="chasse-fenetre-fermer" data-action="fermer" aria-label="Fermer"></button>
+                  </div>
+                </div>
+                <div id="chasse-fenetre-corps" class="bureau-fenetre-corps"></div>
+                <div class="bureau-fenetre-redimension" aria-hidden="true"></div>
+              </div>
+            </div>
+            <div class="bureau-barre-taches">
+              <button type="button" class="bureau-demarrer">Démarrer</button>
+              <div class="bureau-epingles" id="chasse-epingles"></div>
+              <div class="bureau-horloge-bloc">
+                <span class="bureau-date" id="chasse-date"></span>
+                <span class="bureau-horloge" id="chasse-horloge"></span>
+              </div>
+            </div>
+          </div>
+          <div class="bureau-actions" id="chasse-actions">
+            <span id="chasse-compteur-signalements" class="indication-discrete"></span>
+            <button type="button" id="bouton-vision-expert" class="bouton-rond"></button>
+            <button type="button" id="bouton-eureka" class="bouton-rond"></button>
+          </div>
+        </section>
+      </div>
+
+      <section id="historique-fiches" aria-labelledby="historique-fiches-titre">
+        <h2 class="titre-section" id="historique-fiches-titre">Traité</h2>
+        <p class="indication-discrete">Le détail (fiche, corrigé) sera disponible en fin de session.</p>
+        <p id="historique-fiches-vide">Aucune décision enregistrée pour le moment.</p>
+        <ul id="historique-fiches-contenu"></ul>
+      </section>
+    </section>
+
+    <!-- Vue 3bis : Résolution d'incident (LVL2 / LVL3, entre la session et la correction) -->
+    <section class="vue" id="vue-remediation" aria-labelledby="remediation-titre">
+      <h2 class="titre-section" id="remediation-titre">Résolution d'incident</h2>
+      <p class="indication-discrete">Ouvrez l'application adaptée à l'indicateur du correctif en cours : la liste des actions possibles s'affiche directement dans sa fenêtre.</p>
+      <p id="remediation-progression" class="valeur-mono"></p>
+      <div id="remediation-ticket"></div>
+      <div id="remediation-bureau" class="bureau-flipper">
+        <div class="bureau-fond">
+          <div class="bureau-icones" id="remediation-icones"></div>
+          <div id="remediation-fenetre" class="bureau-fenetre" hidden>
+            <div class="bureau-fenetre-bandeau">
+              <span id="remediation-fenetre-titre" class="bureau-fenetre-nom"></span>
+              <div class="bureau-fenetre-controles">
+                <button type="button" class="bureau-fenetre-bouton" data-action="reduire" aria-label="Réduire"></button>
+                <button type="button" class="bureau-fenetre-bouton" data-action="agrandir" aria-label="Plein écran"></button>
+                <button type="button" class="bureau-fenetre-bouton" id="remediation-fenetre-fermer" data-action="fermer" aria-label="Fermer"></button>
+              </div>
+            </div>
+            <div id="remediation-fenetre-corps" class="bureau-fenetre-corps"></div>
+            <div class="bureau-fenetre-redimension" aria-hidden="true"></div>
+          </div>
+        </div>
+        <div class="bureau-barre-taches">
+          <button type="button" class="bureau-demarrer">Démarrer</button>
+          <div class="bureau-epingles" id="remediation-epingles"></div>
+          <div class="bureau-horloge-bloc">
+            <span class="bureau-date" id="remediation-date"></span>
+            <span class="bureau-horloge" id="remediation-horloge"></span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Vue 4 : Correction et note -->
+    <section class="vue" id="vue-correction" aria-labelledby="correction-titre">
+      <h2 class="titre-section" id="correction-titre">Correction de la session</h2>
+      <div id="correction-note"></div>
+      <div id="correction-exercices"></div>
+      <div id="correction-details"></div>
+      <div id="correction-non-traitees"></div>
+      <div class="actions-correction">
+        <button type="button" class="secondaire" id="bouton-telecharger-rapport">Télécharger le rapport complet (.json)</button>
+        <button type="button" id="bouton-nouvelle-session">Démarrer une nouvelle session</button>
+      </div>
+    </section>
+  </main>
+
+  <!-- Fenêtre modale générique (analyse d'indicateur, conversation employé) -->
+  <div id="modale-fond" hidden>
+    <div id="modale" role="dialog" aria-modal="true" aria-labelledby="modale-titre">
+      <div class="modale-entete">
+        <h2 id="modale-titre"></h2>
+        <button type="button" id="modale-fermer" class="secondaire" aria-label="Fermer"></button>
+      </div>
+      <div id="modale-corps"></div>
+    </div>
+  </div>
+
+  <!-- Menu pause : ouvert via le bouton dédié ou un clic sur « SOC//TRIAGE » -->
+  <div id="pause-fond" hidden>
+    <div id="pause-panneau" role="dialog" aria-modal="true" aria-labelledby="pause-titre">
+      <h2 id="pause-titre">Pause</h2>
+      <p class="indication-discrete">La session est en pause : le minuteur et l'apparition des alertes sont suspendus.</p>
+      <div class="actions-pause">
+        <button type="button" id="bouton-reprendre"></button>
+        <button type="button" class="secondaire" id="bouton-quitter-session"></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Guide scénarisé du mode Tuto : bulle de dialogue flottante, non
+       modale (n'empêche jamais d'interagir avec le reste de l'écran). -->
+  <div id="tuto-guide" hidden>
+    <div id="tuto-guide-bulle" role="dialog" aria-modal="false" aria-labelledby="tuto-guide-titre">
+      <div class="tuto-guide-entete">
+        <span class="tuto-guide-avatar" id="tuto-guide-avatar" aria-hidden="true"></span>
+        <div class="tuto-guide-identite">
+          <span class="tuto-guide-nom">Référent SOC</span>
+          <span class="tuto-guide-etape" id="tuto-guide-etape"></span>
+        </div>
+        <button type="button" id="tuto-guide-passer" class="secondaire">Passer le tutoriel</button>
+      </div>
+      <h3 id="tuto-guide-titre"></h3>
+      <div id="tuto-guide-texte"></div>
+      <div class="tuto-guide-navigation">
+        <button type="button" id="tuto-guide-precedent" class="secondaire">Précédent</button>
+        <button type="button" id="tuto-guide-suivant"></button>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/icones.js"></script>
+  <script src="js/entreprise.js"></script>
+  <script src="js/alertes.js"></script>
+  <script src="js/session.js"></script>
+  <script src="js/triage.js"></script>
+  <script src="js/fiche.js"></script>
+  <script src="js/correction.js"></script>
+  <script src="js/remediation.js"></script>
+  <script src="js/chasse.js"></script>
+  <script src="js/tutoriel.js"></script>
+  <script src="js/stockage.js"></script>
+  <script src="js/rapport.js"></script>
+  <script src="js/theme.js"></script>
+  <script src="js/main.js"></script>
+  <script src="js/ui.js"></script>
+</body>
+</html>

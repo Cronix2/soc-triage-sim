@@ -1,0 +1,1741 @@
+/*
+ * SOC//TRIAGE — feuille de style.
+ *
+ * Parti pris : l'app parle le vocabulaire d'une console d'opérateur SOC
+ * (bandeau d'état, files d'alertes, tags de log entre barres obliques),
+ * pas celui d'un tableau de bord SaaS générique. Deux incarnations
+ * cohérentes : le thème sombre est la "console en direct" (celle qu'un
+ * analyste garde allumée toute la nuit), le thème clair est le "rapport
+ * imprimé" (celui qu'on relit le lendemain). Aucune police externe —
+ * uniquement les piles système (contrainte "sans réseau" du projet).
+ */
+
+:root {
+  --police-mono: ui-monospace, "SFMono-Regular", "SF Mono", "Cascadia Code", "Roboto Mono", Consolas, "Liberation Mono", monospace;
+  --police-texte: ui-sans-serif, system-ui, "Segoe UI", Helvetica, Arial, sans-serif;
+
+  /* Thème clair par défaut : "rapport imprimé". */
+  --fond: #ece8db;
+  --surface: #faf8f2;
+  --surface-discrete: #f1eee2;
+  --code-fond: #eee9db;
+  --texte: #1c1a15;
+  --texte-discret: #6b6554;
+  --bordure: #c9c2ac;
+  --accent: #a8660a;
+  --accent-texte: #fff8ec;
+  --flash-arrivee: rgba(168, 102, 10, 0.16);
+
+  --vrai-positif: #b0281c;
+  --faux-positif: #1f7a3d;
+  --a-investiguer: #a8660a;
+
+  --cat-phishing: #0f7ea3;
+  --cat-auth: #7c3aed;
+  --cat-malware: #be123c;
+  --cat-exfiltration: #0d9488;
+  --cat-deni-service: #b5451f;
+  --cat-elevation-privileges: #9d174d;
+  --cat-vulnerabilite: #4d5b0c;
+
+  --espace-1: 0.5rem;
+  --espace-2: 0.75rem;
+  --espace-3: 1rem;
+  --espace-4: 1.5rem;
+  --espace-5: 2.5rem;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="clair"]) {
+    --fond: #0c0d0b;
+    --surface: #131410;
+    --surface-discrete: #191a15;
+    --code-fond: #0a0b09;
+    --texte: #e9e5d8;
+    --texte-discret: #8f8a76;
+    --bordure: #2b2a22;
+    --accent: #f0b429;
+    --accent-texte: #1a1204;
+    --flash-arrivee: rgba(240, 180, 41, 0.14);
+
+    --vrai-positif: #ff6b57;
+    --faux-positif: #4ade80;
+    --a-investiguer: #f0b429;
+
+    --cat-phishing: #5ec8ea;
+    --cat-auth: #c4a2ff;
+    --cat-malware: #ff7a90;
+    --cat-exfiltration: #4fd6c4;
+    --cat-deni-service: #ff8b5e;
+    --cat-elevation-privileges: #ff8fc7;
+    --cat-vulnerabilite: #cbe25a;
+  }
+}
+
+:root[data-theme="sombre"] {
+  --fond: #0c0d0b;
+  --surface: #131410;
+  --surface-discrete: #191a15;
+  --code-fond: #0a0b09;
+  --texte: #e9e5d8;
+  --texte-discret: #8f8a76;
+  --bordure: #2b2a22;
+  --accent: #f0b429;
+  --accent-texte: #1a1204;
+  --flash-arrivee: rgba(240, 180, 41, 0.14);
+
+  --vrai-positif: #ff6b57;
+  --faux-positif: #4ade80;
+  --a-investiguer: #f0b429;
+
+  --cat-phishing: #5ec8ea;
+  --cat-auth: #c4a2ff;
+  --cat-malware: #ff7a90;
+  --cat-exfiltration: #4fd6c4;
+  --cat-deni-service: #ff8b5e;
+  --cat-elevation-privileges: #ff8fc7;
+  --cat-vulnerabilite: #cbe25a;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--fond);
+  color: var(--texte);
+  font-family: var(--police-texte);
+  font-size: 15px;
+  line-height: 1.55;
+}
+
+::selection {
+  background: var(--accent);
+  color: var(--accent-texte);
+}
+
+/* ---------- Barres de défilement : alignées sur la DA (Firefox + Chromium) ----------
+   Basées sur les variables du thème courant plutôt que sur des couleurs en
+   dur : à l'intérieur de .bureau-flipper, la réécriture locale des
+   variables (thème Flipper Zero) s'applique automatiquement ici aussi. */
+
+* {
+  scrollbar-color: var(--bordure) var(--surface-discrete);
+  scrollbar-width: thin;
+}
+
+*::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+*::-webkit-scrollbar-track {
+  background: var(--surface-discrete);
+}
+
+*::-webkit-scrollbar-thumb {
+  background: var(--bordure);
+  border: 2px solid var(--surface-discrete);
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: var(--accent);
+}
+
+*::-webkit-scrollbar-corner {
+  background: var(--surface-discrete);
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+h1, h2, h3 {
+  font-family: var(--police-mono);
+  font-weight: 600;
+  margin: 0;
+}
+
+.mono {
+  font-family: var(--police-mono);
+}
+
+/* ---------- Bandeau d'état persistant ---------- */
+
+#bandeau {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--espace-3);
+  padding: var(--espace-2) var(--espace-4);
+  background: var(--surface);
+  border-bottom: 1px solid var(--bordure);
+}
+
+.marque {
+  font-family: var(--police-mono);
+  font-weight: 700;
+  font-size: 1rem;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.marque .curseur {
+  display: inline-block;
+  width: 0.55em;
+  margin-left: 0.1em;
+  color: var(--accent);
+  animation: clignoter 1.1s steps(1) infinite;
+}
+
+#bandeau-etat {
+  display: flex;
+  align-items: center;
+  gap: var(--espace-3);
+  flex: 1;
+  justify-content: center;
+  font-family: var(--police-mono);
+  font-size: 0.85rem;
+  color: var(--texte-discret);
+}
+
+#bandeau-etat[hidden] {
+  display: none;
+}
+
+#bandeau-etat .minuteur-temps {
+  color: var(--texte);
+  font-weight: 600;
+}
+
+#bandeau-barre {
+  width: 12rem;
+  height: 10px;
+  background: var(--surface-discrete);
+  border: 1px solid var(--bordure);
+  overflow: hidden;
+}
+
+#bandeau-barre-remplissage {
+  height: 100%;
+  background-image: repeating-linear-gradient(
+    90deg,
+    var(--accent) 0,
+    var(--accent) 6px,
+    transparent 6px,
+    transparent 9px
+  );
+  transition: width 1s linear;
+}
+
+#bouton-theme,
+#bouton-pause {
+  background: transparent;
+  border: 1px solid var(--bordure);
+  color: var(--texte);
+  font-family: var(--police-mono);
+  font-size: 0.8rem;
+  padding: 0.4rem 0.7rem;
+  white-space: nowrap;
+}
+
+/* ---------- Structure générale ---------- */
+
+main {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: var(--espace-4);
+}
+
+.vue {
+  display: none;
+}
+
+.vue.active {
+  display: block;
+}
+
+section {
+  background: var(--surface);
+  border: 1px solid var(--bordure);
+  padding: var(--espace-3);
+  margin-bottom: var(--espace-3);
+}
+
+.titre-section {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--texte-discret);
+  margin-bottom: var(--espace-2);
+}
+
+.titre-section::before {
+  content: "// ";
+  color: var(--accent);
+}
+
+.icone {
+  display: inline-flex;
+  align-items: center;
+  vertical-align: -2px;
+}
+
+button .icone {
+  margin-right: 0.4rem;
+}
+
+button {
+  font-family: var(--police-texte);
+  font-size: 0.9rem;
+  padding: 0.6rem 1.1rem;
+  border: 1px solid var(--accent);
+  background: var(--accent);
+  color: var(--accent-texte);
+  cursor: pointer;
+}
+
+button:disabled {
+  border-color: var(--bordure);
+  background: var(--surface-discrete);
+  color: var(--texte-discret);
+  cursor: not-allowed;
+}
+
+button.secondaire {
+  background: transparent;
+  color: var(--texte);
+  border-color: var(--bordure);
+}
+
+/* ---------- Accueil ---------- */
+
+.accroche {
+  text-align: center;
+  padding: var(--espace-5) var(--espace-3);
+}
+
+.accroche h1 {
+  font-size: clamp(1.8rem, 4vw, 2.6rem);
+  letter-spacing: 0.02em;
+}
+
+.accroche p {
+  color: var(--texte-discret);
+  max-width: 34rem;
+  margin: var(--espace-2) auto 0;
+}
+
+.panneau-config {
+  max-width: 34rem;
+  margin: 0 auto;
+}
+
+.groupe-puces {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: var(--espace-3);
+}
+
+.puce {
+  font-family: var(--police-mono);
+  font-size: 0.85rem;
+  padding: 0.5rem 0.9rem;
+  border: 1px solid var(--bordure);
+  background: var(--surface-discrete);
+  color: var(--texte);
+  cursor: pointer;
+}
+
+.puce:hover {
+  border-color: var(--accent);
+}
+
+.puce[aria-pressed="true"] {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: var(--accent-texte);
+}
+
+.pastille {
+  display: inline-block;
+  width: 0.6rem;
+  height: 0.6rem;
+}
+
+.liste-fonctionnalites {
+  list-style: none;
+  margin: var(--espace-4) 0 0;
+  padding: 0;
+  font-family: var(--police-mono);
+  font-size: 0.85rem;
+  color: var(--texte-discret);
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.liste-fonctionnalites li::before {
+  content: "> ";
+  color: var(--accent);
+}
+
+/* ---------- Session : file d'alertes ---------- */
+
+.colonnes {
+  display: grid;
+  /* File d'alertes volontairement plus étroite pour laisser le maximum de
+     place à la colonne d'analyse (détail-alerte). */
+  grid-template-columns: minmax(280px, 380px) 1fr;
+  gap: var(--espace-3);
+}
+
+@media (max-width: 900px) {
+  .colonnes {
+    grid-template-columns: 1fr;
+  }
+}
+
+#banniere-temps-ecoule {
+  font-family: var(--police-mono);
+  font-size: 0.8rem;
+  color: var(--accent);
+  border: 1px solid var(--accent);
+  padding: 0.5rem 0.7rem;
+  margin-bottom: var(--espace-2);
+}
+
+.groupe-filtres {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-bottom: var(--espace-2);
+}
+
+.puce-filtre {
+  font-size: 0.78rem;
+  padding: 0.35rem 0.65rem;
+}
+
+#liste-alertes-contenu {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  max-height: 26rem;
+  overflow-y: auto;
+}
+
+.alerte-item {
+  border: 1px solid var(--bordure);
+  border-left: 4px solid var(--categorie-couleur, var(--bordure));
+  padding: 0.6rem 0.75rem;
+  cursor: pointer;
+  background: var(--surface-discrete);
+  color: var(--texte);
+}
+
+.alerte-item .alerte-entete {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem;
+  font-family: var(--police-mono);
+  font-size: 0.78rem;
+  color: var(--texte-discret);
+}
+
+.alerte-item .alerte-categorie {
+  color: var(--categorie-couleur, var(--texte));
+  font-weight: 600;
+}
+
+.alerte-item p {
+  margin: 0.35rem 0 0;
+  font-size: 0.9rem;
+}
+
+.alerte-item:hover {
+  border-color: var(--accent);
+}
+
+.alerte-item.selectionnee {
+  outline: 2px solid var(--accent);
+  outline-offset: -1px;
+}
+
+.alerte-item.verrouillee {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.etiquette-nouveau {
+  font-family: var(--police-mono);
+  font-size: 0.7rem;
+  color: var(--accent);
+  border: 1px solid var(--accent);
+  padding: 0.05rem 0.35rem;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .alerte-item.arrivee {
+    animation: flash-arrivee 1.4s ease-out;
+  }
+
+  .alerte-item {
+    transition: opacity 0.4s ease, transform 0.4s ease, max-height 0.4s ease, padding 0.4s ease, margin 0.4s ease;
+    max-height: 20rem;
+    overflow: hidden;
+  }
+
+  .alerte-item.disparition {
+    opacity: 0;
+    transform: translateX(1rem);
+    max-height: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+    margin: 0;
+    border-width: 0;
+  }
+}
+
+/* ---------- Onglets de session (LVL3 : file / chasse aux menaces) ---------- */
+
+.onglets-session {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: var(--espace-3);
+}
+
+.onglets-session[hidden] {
+  display: none;
+}
+
+.onglet-bouton {
+  font-family: var(--police-mono);
+  font-size: 0.85rem;
+  padding: 0.5rem 0.9rem;
+  border: 1px solid var(--bordure);
+  background: var(--surface-discrete);
+  color: var(--texte);
+}
+
+.onglet-bouton[aria-pressed="true"] {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: var(--accent-texte);
+}
+
+.onglet-contenu[hidden] {
+  display: none;
+}
+
+/* ---------- Bureau simulé partagé (chasse aux menaces + résolution d'incident) ----------
+   Reproduit un vrai bureau d'ordinateur : .bureau-fond joue le rôle du fond
+   d'écran (les icônes y sont disposées en grille, sans cadre), les
+   fenêtres s'y ouvrent en superposition à taille fixe, et .bureau-barre-
+   taches est ancrée en bas du cadre (Démarrer, icônes épinglées, horloge). */
+
+.bulle-pensee {
+  position: relative;
+  width: 100%;
+  padding: 0.75rem 1rem;
+  background: var(--surface-discrete);
+  border: 1px solid var(--accent);
+  border-radius: 14px;
+}
+
+.bulle-pensee[hidden] {
+  display: none;
+}
+
+.bulle-pensee p {
+  margin: 0 0 0.5rem;
+  font-size: 0.88rem;
+  font-style: italic;
+}
+
+.bureau-fond {
+  position: relative;
+  flex: 1;
+  min-height: 36rem;
+  background:
+    radial-gradient(rgba(255, 130, 0, 0.08) 1px, transparent 1px) 0 0 / 4px 4px,
+    linear-gradient(160deg, #1a1200 0%, #0d0d0d 65%);
+}
+
+/* Icônes du bureau : sans cadre ni fond, rangées de haut en bas puis de
+   gauche à droite (grid-auto-flow: column) — exactement le classement
+   d'un vrai bureau d'OS. */
+.bureau-icones {
+  position: absolute;
+  inset: 0;
+  padding: var(--espace-2);
+  display: grid;
+  grid-template-rows: repeat(7, minmax(4.2rem, auto));
+  grid-auto-flow: column;
+  grid-auto-columns: 5.4rem;
+  gap: 0.2rem;
+  align-content: start;
+}
+
+.bureau-icone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3rem;
+  width: 5.4rem;
+  padding: 0.3rem 0.2rem;
+  background: transparent;
+  border: none;
+  color: var(--texte);
+  font-size: 0.68rem;
+  text-align: center;
+  line-height: 1.2;
+}
+
+.bureau-icone .icone svg {
+  width: 26px;
+  height: 26px;
+}
+
+.bureau-icone:hover,
+.bureau-icone[aria-pressed="true"] {
+  background: rgba(255, 130, 0, 0.16);
+}
+
+/* Fenêtre : superposée au fond d'écran, taille fixe, centrée en haut de
+   la zone de bureau — jamais dans le flux normal, donc son ouverture ne
+   change jamais la hauteur du bureau. */
+.bureau-fenetre {
+  /* Position et taille réelles fixées en JS à l'ouverture (centrage
+     initial, puis glisser-déposer via le bandeau et redimensionnement via
+     la poignée ; largeur par défaut adaptée par application) — ces
+     valeurs ne sont qu'un repli avant le premier positionnement. */
+  position: absolute;
+  top: 0.75rem;
+  left: 0.75rem;
+  width: 30rem;
+  height: 24rem;
+  min-width: 18rem;
+  min-height: 12rem;
+  background: var(--code-fond);
+  border: 1px solid var(--bordure);
+  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.4);
+  display: flex;
+  flex-direction: column;
+  z-index: 2;
+}
+
+.bureau-fenetre[hidden] {
+  display: none;
+}
+
+/* Plein écran (bouton « agrandir ») : la poignée de redimensionnement et
+   le glisser via le bandeau n'ont plus de sens tant que la fenêtre occupe
+   tout le bureau. */
+.bureau-fenetre.agrandie .bureau-fenetre-redimension {
+  display: none;
+}
+
+.bureau-fenetre.agrandie .bureau-fenetre-bandeau {
+  cursor: default;
+}
+
+.bureau-fenetre-bandeau {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 0.5rem;
+  background: var(--surface-discrete);
+  border-bottom: 1px solid var(--bordure);
+  font-family: var(--police-mono);
+  font-size: 0.82rem;
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+}
+
+.bureau-fenetre-bandeau:active {
+  cursor: grabbing;
+}
+
+.bureau-fenetre-nom {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.bureau-fenetre-controles {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  flex-shrink: 0;
+}
+
+/* Les trois boutons (réduire, agrandir, fermer) partagent exactement la
+   même taille — seul le glyphe change. */
+.bureau-fenetre-bouton {
+  width: 1.6rem;
+  height: 1.6rem;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--surface);
+  border: 1px solid var(--bordure);
+  color: var(--texte-discret);
+  line-height: 1;
+  cursor: pointer;
+}
+
+.bureau-fenetre-bouton:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.bureau-fenetre-bouton[data-action="fermer"]:hover {
+  background: var(--vrai-positif);
+  border-color: var(--vrai-positif);
+  color: var(--accent-texte);
+}
+
+.bureau-fenetre-bouton[data-action="reduire"]::before {
+  content: '';
+  width: 0.65em;
+  height: 2px;
+  background: currentColor;
+}
+
+.bureau-fenetre-bouton[data-action="agrandir"]::before {
+  content: '';
+  width: 0.6em;
+  height: 0.6em;
+  border: 1.5px solid currentColor;
+}
+
+.bureau-fenetre-bouton[data-action="fermer"] .icone svg {
+  width: 14px;
+  height: 14px;
+}
+
+.bureau-fenetre-corps {
+  flex: 1;
+  min-height: 0;
+  padding: 0.75rem;
+  font-family: var(--police-mono);
+  font-size: 0.82rem;
+  overflow-x: auto;
+  overflow-y: auto;
+}
+
+/* Poignée de redimensionnement : coin bas-droit de la fenêtre, glissable
+   via Pointer Events (cf. rendreFenetreRedimensionnable dans ui.js). */
+.bureau-fenetre-redimension {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  width: 0.9rem;
+  height: 0.9rem;
+  cursor: nwse-resize;
+  touch-action: none;
+}
+
+.bureau-fenetre-redimension::before {
+  content: '';
+  position: absolute;
+  right: 0.2rem;
+  bottom: 0.2rem;
+  width: 0.5rem;
+  height: 0.5rem;
+  border-right: 2px solid var(--texte-discret);
+  border-bottom: 2px solid var(--texte-discret);
+}
+
+.bureau-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.8rem;
+}
+
+/* Vision de l'expert / Eureka : boutons ronds icône seule (façon manette
+   de jeu), le libellé complet reste disponible via aria-label/title. Le
+   badge en coin remplace le compteur de charges qui figurait jusqu'ici
+   dans le texte du bouton. */
+.bouton-rond {
+  position: relative;
+  width: 3.2rem;
+  height: 3.2rem;
+  padding: 0;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--surface);
+  border: 1px solid var(--bordure);
+  color: var(--texte);
+}
+
+.bouton-rond .icone svg {
+  width: 24px;
+  height: 24px;
+}
+
+.bouton-rond:hover:not(:disabled) {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.bouton-rond-badge {
+  position: absolute;
+  top: -0.15rem;
+  right: -0.15rem;
+  min-width: 1.15rem;
+  height: 1.15rem;
+  padding: 0 0.25rem;
+  border-radius: 999px;
+  background: var(--vrai-positif);
+  color: #fff;
+  font-family: var(--police-mono);
+  font-size: 0.65rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+
+#bouton-vision-expert[aria-pressed="true"],
+#bouton-eureka[aria-pressed="true"] {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: var(--accent-texte);
+}
+
+/* Barre des tâches : ancrée en bas du cadre (flex-shrink: 0 dans un
+   parent flex-column), regroupe Démarrer, les icônes épinglées et la
+   date/heure — comme une vraie barre des tâches. */
+.bureau-barre-taches {
+  display: flex;
+  align-items: center;
+  gap: var(--espace-2);
+  padding: 0.35rem 0.5rem;
+  background: var(--surface-discrete);
+  border-top: 1px solid var(--bordure);
+  font-family: var(--police-mono);
+  font-size: 0.75rem;
+  flex-shrink: 0;
+}
+
+.bureau-demarrer {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.3rem 0.55rem;
+  background: transparent;
+  border: 1px solid var(--bordure);
+  color: var(--texte);
+  font-family: inherit;
+  font-size: inherit;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  flex-shrink: 0;
+}
+
+.bureau-demarrer:hover {
+  border-color: var(--accent);
+}
+
+.bureau-demarrer::before {
+  content: '';
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  background: var(--accent);
+}
+
+.bureau-epingles {
+  display: flex;
+  align-items: center;
+  gap: 0.15rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.bureau-icone-epinglee {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.9rem;
+  height: 1.9rem;
+  padding: 0;
+  background: transparent;
+  border: none;
+  color: var(--texte);
+  flex-shrink: 0;
+}
+
+.bureau-icone-epinglee .icone svg {
+  width: 18px;
+  height: 18px;
+}
+
+.bureau-icone-epinglee:hover,
+.bureau-icone-epinglee[aria-pressed="true"] {
+  background: rgba(255, 130, 0, 0.2);
+}
+
+.bureau-horloge-bloc {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  flex-shrink: 0;
+  line-height: 1.25;
+}
+
+.bureau-date {
+  color: var(--texte-discret);
+  font-size: 0.68rem;
+}
+
+.bureau-horloge {
+  color: var(--accent);
+  font-weight: 700;
+}
+
+/* ---------- Bureau façon Flipper Zero : thème fixe monochrome orange/noir,
+   indépendant du thème clair/sombre choisi ailleurs dans l'app — en
+   redéfinissant localement les mêmes variables de thème, toutes les règles
+   existantes (icônes, fenêtres, boutons, table SIEM...) l'adoptent sans
+   dupliquer de sélecteurs. ---------- */
+
+.bureau-flipper {
+  --fond: #0d0d0d;
+  --surface: #1c1c1c;
+  --surface-discrete: #242018;
+  --code-fond: #161616;
+  --texte: #ffb166;
+  --texte-discret: #b3752e;
+  --bordure: #4d3a20;
+  --accent: #ff8200;
+  --accent-texte: #1a0d00;
+  --vrai-positif: #ff5c33;
+  --faux-positif: #ff8200;
+  --a-investiguer: #ffb166;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  background: var(--fond);
+  border: 2px solid var(--bordure);
+  padding: 0.5rem;
+  color: var(--texte);
+  width: 100%;
+  overflow: hidden;
+}
+
+.bureau-flipper .icone svg {
+  image-rendering: pixelated;
+}
+
+/* ---------- Chasse aux menaces (LVL3) : habillage propre à cette activité ---------- */
+
+.chasse-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.chasse-table th {
+  text-align: left;
+  padding: 0.35rem 0.5rem;
+  border-bottom: 2px solid var(--accent);
+  color: var(--texte-discret);
+  text-transform: uppercase;
+  font-size: 0.72rem;
+  letter-spacing: 0.05em;
+}
+
+.chasse-table td {
+  text-align: left;
+  padding: 0.35rem 0.5rem;
+  border-bottom: 1px solid var(--bordure);
+  white-space: nowrap;
+}
+
+.chasse-table tbody tr:nth-child(even) {
+  background: var(--surface-discrete);
+}
+
+.chasse-element {
+  cursor: default;
+}
+
+#chasse-fenetre.mode-eureka .chasse-element {
+  cursor: pointer;
+}
+
+#chasse-fenetre.mode-eureka .chasse-element:hover {
+  outline: 1px dashed var(--accent);
+}
+
+.chasse-element.signale {
+  outline: 2px solid var(--accent);
+  outline-offset: -1px;
+}
+
+.badge-signale {
+  color: var(--accent);
+  font-weight: 700;
+  margin-left: 0.4rem;
+  white-space: nowrap;
+}
+
+#chasse-fenetre.vision-active .chasse-element[data-faille="true"] {
+  color: var(--vrai-positif);
+  font-weight: 700;
+  animation: pulsation-vision 1s ease-in-out infinite;
+}
+
+@keyframes pulsation-vision {
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.ligne-terminal {
+  margin: 0 0 0.3rem;
+}
+
+.terminal-invite {
+  margin: 0 0 0.5rem;
+  color: var(--texte-discret);
+}
+
+.terminal-invite:last-child {
+  margin: 0.5rem 0 0;
+}
+
+.terminal-prompt {
+  color: var(--accent);
+}
+
+.terminal-curseur {
+  color: var(--accent);
+  animation: clignotement-curseur 1s step-end infinite;
+}
+
+@keyframes clignotement-curseur {
+  50% {
+    opacity: 0;
+  }
+}
+
+/* ---------- Résolution d'incident (LVL2/LVL3) : bureau applicatif ---------- */
+
+#remediation-progression {
+  color: var(--texte-discret);
+  font-size: 0.85rem;
+  margin-bottom: var(--espace-2);
+}
+
+.bloc-remediation {
+  border: 1px solid var(--bordure);
+  padding: 0.75rem;
+  margin-bottom: var(--espace-3);
+}
+
+/* Le geste de résolution se fait entièrement dans la fenêtre de
+   l'application ouverte : rappel de la cible du correctif en cours, puis
+   la liste des actions proposées par cette application (leurres compris)
+   — plus aucun panneau externe à consulter en parallèle. */
+.remediation-app-tagline {
+  margin: 0 0 0.5rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.7rem;
+  color: var(--texte-discret);
+}
+
+.remediation-app-cible {
+  margin: 0 0 0.85rem;
+  padding-bottom: 0.6rem;
+  border-bottom: 1px solid var(--bordure);
+}
+
+.remediation-actions {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.remediation-action {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.55rem 0.7rem;
+  background: var(--surface-discrete);
+  border: 1px solid var(--bordure);
+  color: var(--texte);
+  font-family: var(--police-mono);
+  font-size: 0.82rem;
+  text-align: left;
+  cursor: pointer;
+}
+
+.remediation-action::after {
+  content: '→';
+  color: var(--texte-discret);
+}
+
+.remediation-action:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.remediation-action:hover::after {
+  color: var(--accent);
+}
+
+/* ---------- Détail + classification ---------- */
+
+.bloc-detail dt {
+  font-family: var(--police-mono);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--texte-discret);
+  margin-top: var(--espace-2);
+}
+
+.bloc-detail dd {
+  margin: 0.2rem 0 0;
+}
+
+.bloc-detail .valeur-mono {
+  font-family: var(--police-mono);
+  font-size: 0.85rem;
+}
+
+.groupe-classification {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.5rem;
+  margin: var(--espace-3) 0;
+}
+
+.groupe-classification-reduit {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+.carte-classification {
+  border: 1px solid var(--bordure);
+  background: var(--surface-discrete);
+  color: var(--texte);
+  padding: 0.7rem 0.4rem;
+  text-align: center;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.carte-classification[data-classe="vrai_positif"] {
+  --classe-couleur: var(--vrai-positif);
+}
+
+.carte-classification[data-classe="faux_positif"] {
+  --classe-couleur: var(--faux-positif);
+}
+
+.carte-classification[data-classe="a_investiguer"] {
+  --classe-couleur: var(--a-investiguer);
+}
+
+.carte-classification:hover {
+  border-color: var(--classe-couleur);
+}
+
+.carte-classification[aria-pressed="true"] {
+  border-color: var(--classe-couleur);
+  background: var(--classe-couleur);
+  color: var(--accent-texte);
+}
+
+.champ-raison {
+  margin-bottom: var(--espace-2);
+}
+
+.champ-raison label {
+  display: block;
+  font-family: var(--police-mono);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--texte-discret);
+  margin-bottom: 0.3rem;
+}
+
+.champ-raison textarea {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid var(--bordure);
+  background: var(--surface);
+  color: var(--texte);
+  font-family: inherit;
+  resize: vertical;
+}
+
+.option-case {
+  display: block;
+  font-size: 0.85rem;
+  font-weight: normal;
+  text-transform: none;
+  letter-spacing: normal;
+  margin: 0.15rem 0;
+}
+
+.champ-raison select {
+  width: 100%;
+  padding: 0.4rem;
+  border: 1px solid var(--bordure);
+  background: var(--surface);
+  color: var(--texte);
+  font-family: inherit;
+}
+
+.erreur-champ {
+  color: var(--vrai-positif);
+  font-size: 0.85rem;
+  margin-top: 0.35rem;
+}
+
+/* ---------- Fiche + historique ---------- */
+
+pre.fiche-markdown {
+  white-space: pre-wrap;
+  background: var(--code-fond);
+  color: var(--texte);
+  border: 1px solid var(--bordure);
+  padding: 0.75rem;
+  font-size: 0.82rem;
+  font-family: var(--police-mono);
+}
+
+.indication-discrete {
+  font-size: 0.8rem;
+  color: var(--texte-discret);
+  margin-top: -0.4rem;
+  margin-bottom: var(--espace-2);
+}
+
+#historique-fiches-contenu {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 0.5rem;
+}
+
+#historique-fiches-contenu li {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.5rem;
+  border: 1px solid var(--bordure);
+  padding: 0.5rem 0.7rem;
+  font-family: var(--police-mono);
+  font-size: 0.82rem;
+}
+
+#historique-fiches-contenu button {
+  padding: 0.3rem 0.6rem;
+  font-size: 0.78rem;
+}
+
+/* ---------- Badges de statut ---------- */
+
+.badge {
+  display: inline-block;
+  padding: 0.1rem 0.5rem;
+  font-family: var(--police-mono);
+  font-size: 0.72rem;
+  border: 1px solid transparent;
+}
+
+.badge.vrai_positif {
+  background: var(--vrai-positif);
+  color: var(--accent-texte);
+}
+
+.badge.faux_positif {
+  background: var(--faux-positif);
+  color: var(--accent-texte);
+}
+
+.badge.a_investiguer {
+  background: var(--a-investiguer);
+  color: var(--accent-texte);
+}
+
+.badge.correct {
+  border-color: var(--faux-positif);
+  color: var(--faux-positif);
+}
+
+.badge.incorrect {
+  border-color: var(--vrai-positif);
+  color: var(--vrai-positif);
+}
+
+/* ---------- Correction ---------- */
+
+#correction-note {
+  text-align: center;
+  padding: var(--espace-4);
+  margin-bottom: var(--espace-3);
+  border: 1px solid var(--bordure);
+}
+
+#correction-note .note-valeur {
+  display: block;
+  font-family: var(--police-mono);
+  font-size: 3rem;
+  font-weight: 700;
+  color: var(--accent);
+}
+
+#correction-note .note-detail {
+  color: var(--texte-discret);
+  font-size: 0.9rem;
+}
+
+.bloc-exercice {
+  border: 1px solid var(--bordure);
+  padding: 0.6rem 0.75rem;
+  margin-bottom: 0.4rem;
+}
+
+.bloc-exercice p {
+  margin: 0.3rem 0 0;
+  color: var(--texte-discret);
+  font-size: 0.9rem;
+}
+
+.ligne-correction {
+  border: 1px solid var(--bordure);
+  padding: 0.6rem 0.75rem;
+  margin-bottom: 0.4rem;
+  font-size: 0.9rem;
+}
+
+.ligne-correction-entete {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.ligne-correction p {
+  margin: 0.3rem 0;
+  color: var(--texte-discret);
+}
+
+.ligne-correction .verdict {
+  font-family: var(--police-mono);
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.ligne-correction .fiche-revelee {
+  margin-top: 0.5rem;
+}
+
+.ligne-correction.correcte .verdict {
+  color: var(--faux-positif);
+}
+
+.ligne-correction.incorrecte .verdict {
+  color: var(--vrai-positif);
+}
+
+.actions-correction {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin-top: var(--espace-3);
+}
+
+#correction-non-traitees {
+  color: var(--texte-discret);
+  font-size: 0.85rem;
+  margin-top: var(--espace-2);
+}
+
+/* ---------- Animations ---------- */
+
+@keyframes clignoter {
+  50% {
+    opacity: 0;
+  }
+}
+
+@keyframes flash-arrivee {
+  from {
+    background-color: var(--flash-arrivee);
+  }
+  to {
+    background-color: var(--surface-discrete);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+/* ---------- Liste d'indicateurs avec analyse à la demande ---------- */
+
+.liste-indicateurs {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.liste-indicateurs li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.actions-contact {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: var(--espace-2) 0;
+}
+
+/* ---------- Fenêtre modale ---------- */
+
+#modale-fond {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  align-items: center;
+  justify-content: center;
+  padding: var(--espace-3);
+  z-index: 100;
+}
+
+#modale-fond:not([hidden]) {
+  display: flex;
+}
+
+#modale-fond[hidden] {
+  display: none;
+}
+
+#modale {
+  background: var(--surface);
+  border: 1px solid var(--bordure);
+  width: min(32rem, 100%);
+  max-height: min(34rem, 100%);
+  display: flex;
+  flex-direction: column;
+}
+
+.modale-entete {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--bordure);
+}
+
+.modale-entete h2 {
+  font-size: 0.9rem;
+}
+
+#modale-fermer {
+  background: transparent;
+  border: 1px solid var(--bordure);
+  color: var(--texte);
+  padding: 0.2rem 0.55rem;
+}
+
+#modale-corps {
+  padding: 1rem;
+  overflow-y: auto;
+}
+
+/* ---------- Menu pause ---------- */
+
+#pause-fond {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  align-items: center;
+  justify-content: center;
+  padding: var(--espace-3);
+  z-index: 100;
+}
+
+#pause-fond:not([hidden]) {
+  display: flex;
+}
+
+#pause-fond[hidden] {
+  display: none;
+}
+
+#pause-panneau {
+  background: var(--surface);
+  border: 1px solid var(--bordure);
+  width: min(24rem, 100%);
+  padding: var(--espace-4);
+  text-align: center;
+}
+
+#pause-panneau h2 {
+  font-family: var(--police-mono);
+  font-size: 1.1rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.actions-pause {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  margin-top: var(--espace-3);
+}
+
+/* ---------- Rapport d'analyse fictif (façon VirusTotal) ---------- */
+
+.rapport-analyse .rapport-score {
+  font-family: var(--police-mono);
+  font-size: 1.6rem;
+  font-weight: 700;
+}
+
+.rapport-analyse dl {
+  margin: var(--espace-2) 0 0;
+}
+
+.rapport-analyse dt {
+  font-family: var(--police-mono);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--texte-discret);
+  margin-top: 0.5rem;
+}
+
+.rapport-analyse dd {
+  margin: 0.15rem 0 0;
+}
+
+/* ---------- Conversation façon SMS ---------- */
+
+.fil-conversation {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  max-height: 14rem;
+  overflow-y: auto;
+  margin-bottom: var(--espace-2);
+  padding-right: 0.25rem;
+}
+
+.bulle {
+  max-width: 80%;
+  padding: 0.5rem 0.75rem;
+  border-radius: 12px;
+  margin: 0;
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+.bulle.envoye {
+  align-self: flex-end;
+  background: var(--accent);
+  color: var(--accent-texte);
+  border-bottom-right-radius: 2px;
+}
+
+.bulle.recu {
+  align-self: flex-start;
+  background: var(--surface-discrete);
+  border: 1px solid var(--bordure);
+  border-bottom-left-radius: 2px;
+}
+
+.groupe-questions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.groupe-questions .puce {
+  text-align: left;
+}
+
+@media (max-width: 640px) {
+  .groupe-classification {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ---------- Guide scénarisé du mode Tuto (bulle de dialogue) ---------- */
+/*
+ * Bandeau ancré en bas de l'écran, pleine largeur, plutôt qu'une carte
+ * flottante dans un coin : sur la mise en page à deux colonnes (file
+ * d'alertes / détail), une carte en coin finissait par recouvrir les
+ * boutons du formulaire de classification. Le bandeau ne bloque jamais le
+ * contenu grâce à un padding-bottom réservé sur <body>, ajusté en JS à sa
+ * hauteur réelle (cf. ui.js:ajusterEspacementPourGuide) — fiable quelle
+ * que soit la longueur du texte de l'étape ou la taille de l'écran.
+ * z-index choisi au-dessus du bureau simulé (2) et du bandeau d'en-tête
+ * (10), mais sous la modale et le menu pause (100) pour qu'un vrai
+ * dialogue (ex. « Analyser ») les recouvre correctement pendant la visite.
+ */
+
+#tuto-guide {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 60;
+  display: flex;
+  justify-content: center;
+  padding: var(--espace-3);
+  pointer-events: none;
+}
+
+#tuto-guide[hidden] {
+  display: none;
+}
+
+#tuto-guide-bulle {
+  pointer-events: auto;
+  width: min(56rem, 100%);
+  max-height: min(55vh, 26rem);
+  overflow-y: auto;
+  background: var(--surface);
+  border: 1px solid var(--accent);
+  box-shadow: 0 -10px 26px rgba(0, 0, 0, 0.3);
+  padding: var(--espace-3);
+}
+
+.tuto-guide-entete {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-bottom: var(--espace-2);
+}
+
+.tuto-guide-avatar {
+  display: inline-flex;
+  flex-shrink: 0;
+  color: var(--accent);
+}
+
+.tuto-guide-avatar .icone svg {
+  width: 22px;
+  height: 22px;
+}
+
+.tuto-guide-identite {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+}
+
+.tuto-guide-nom {
+  font-family: var(--police-mono);
+  font-weight: 700;
+  font-size: 0.82rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.tuto-guide-etape {
+  font-size: 0.72rem;
+  color: var(--texte-discret);
+}
+
+#tuto-guide-passer {
+  flex-shrink: 0;
+  font-size: 0.78rem;
+  padding: 0.4rem 0.7rem;
+}
+
+#tuto-guide-titre {
+  font-size: 1rem;
+  margin-bottom: var(--espace-2);
+}
+
+#tuto-guide-texte p {
+  margin: 0 0 0.6rem;
+}
+
+#tuto-guide-texte p:last-child {
+  margin-bottom: 0;
+}
+
+.tuto-guide-navigation {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+  margin-top: var(--espace-3);
+}
+
+/* Surlignage de l'élément commenté par l'étape en cours : contour pulsé
+   plutôt qu'un cadre de spotlight plein écran, pour rester simple et sans
+   effet de bord sur la mise en page ou le défilement. */
+.tuto-spotlight {
+  outline: 3px solid var(--accent);
+  outline-offset: 3px;
+  animation: tuto-pulsation 1.6s ease-in-out infinite;
+}
+
+@keyframes tuto-pulsation {
+  50% {
+    outline-color: transparent;
+  }
+}
+
+@media (max-width: 640px) {
+  #tuto-guide {
+    padding: var(--espace-2);
+  }
+}

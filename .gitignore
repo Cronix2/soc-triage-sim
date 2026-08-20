@@ -1,0 +1,18 @@
+# Outillage local (assistants de développement, gestion de specs) —
+# non versionné.
+.claude/
+.specify/
+specs/
+
+# Système / éditeurs
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+
+# Dépendances (au cas où des outils npm seraient ajoutés plus tard)
+node_modules/
+
+# Fichiers temporaires
+*.log
