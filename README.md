@@ -1,3 +1,5 @@
+<p align="center"><img src="SOC triage sim logo.png" alt="SOC triage sim" width="300"></p>
+
 # SOC // TRIAGE
 
 Entraînement au tri d'alertes de sécurité pour un poste de SOC (Security Operations Center). Application web statique, entièrement en français, sans backend, sans compte et sans connexion réseau : tout tourne dans le navigateur, à partir de données fictives générées aléatoirement.
